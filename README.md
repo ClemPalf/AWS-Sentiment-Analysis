@@ -2,6 +2,10 @@
 
 The goal is to build a simple web page which a user can use to enter a movie review. The web page will then send the review off to our deployed model which will predict the sentiment of the entered review.   
   
+<p align="center">
+  <img src="https://github.com/ClemPalf/AWS-deployment/blob/main/images/Test_1.png"/>
+</p>  
+  
 ## Setup Instructions
 
 The notebooks provided in this repository are intended to be executed using Amazon's SageMaker platform. The following is a brief set of instructions on setting up a managed notebook instance using SageMaker, from which the notebooks can be completed and run.
