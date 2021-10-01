@@ -1,6 +1,6 @@
 # AWS-Sentiment-Analysis
 
-The goal is to build a simple web page which a user can use to enter a movie review. The web page will then send the review off to our deployed model which will predict the sentiment of the entered review.   
+The goal is to build a simple web page which a user can use to enter a movie review. The web page will then send the review off to a RNN deployed model which will predict the sentiment of the entered review.   
   
 <p align="center">
   <img src="https://github.com/ClemPalf/AWS-deployment/blob/main/images/Test_1.png"/>
