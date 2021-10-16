@@ -1,4 +1,5 @@
-# AWS-Sentiment-Analysis
+# SageMaker-case-studies
+
 
 This repository contains different ML projects undertaken with SageMaker.
   
