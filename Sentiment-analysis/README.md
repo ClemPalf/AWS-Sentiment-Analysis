@@ -3,7 +3,7 @@
 The goal is to build a simple web page which a user can use to enter a movie review. The web page will then send the review off to a RNN deployed model which will predict the sentiment of the entered review.   
   
 <p align="center">
-  <img src="https://github.com/ClemPalf/AWS-deployment/blob/main/images/Test_1.png"/>
+  <img src="https://github.com/ClemPalf/SageMaker-case-studies/blob/560ae3e7ff253478ee2cb92e6be8fc9cf21cce73/Sentiment-analysis/images/Test_1.png"/>
 </p>  
   
 ## Setup Instructions
