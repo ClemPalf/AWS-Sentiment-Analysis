@@ -11,61 +11,78 @@ import argparse
 import os
 import logging
 import sys
+import copy
+import smdebug.pytorch as smd
+
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True # Otherwise it throws the error "OSError: image file is truncated (150 bytes not processed)"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
-def test(model, loader, criterion, val_or_test):
+def test(model, loader, criterion, val_or_test, hook, device):
     '''
     TODO: Complete this function that can take a model and a 
           testing data loader and will get the test accuray/loss of the model
           Remember to include any debugging/profiling hooks that you might need
     '''
-    
     model.eval()        # Let's save some compute ressources by not tracking the gradients.
+    hook.set_mode(smd.modes.EVAL) # Set the SMDebug hook for validation phase.
+    
     running_loss=0      
     running_corrects=0 
     
     for inputs, labels in loader:
+        # Pass inputs and labels to device
+        inputs = inputs.to(device)
+        labels = labels.to(device)
+        
         outputs=model(inputs)
         loss=criterion(outputs, labels)
         _, preds = torch.max(outputs, 1)
         running_loss += loss.item() * inputs.size(0)           
         running_corrects += torch.sum(preds == labels.data)    
 
-    total_loss = running_loss / len(test_loader)       
-    total_acc = running_corrects.double() / len(test_loader)
+    total_loss = running_loss / len(loader)       
+    total_acc = running_corrects / len(loader)
     
     if val_or_test == "val":
-        logger.info("\nVal set: Average loss: {:.4f}, Accuracy: {}\n".format(total_loss, total_acc))
+        logger.info("\nVal set: Average loss: {:.2f}, Accuracy: {:.2f}\n".format(total_loss, total_acc))
     else:   
-        logger.info("\nTest set: Average loss: {:.4f}, Accuracy: {}\n".format(total_loss, total_acc)) 
+        logger.info("\nTest set: Average loss: {:.2f}, Accuracy: {:.2f}\n".format(total_loss, total_acc)) 
     
     return total_loss
     
-def train(model, train_loader, val_loader, criterion, optimizer):
+def train(model, train_loader, val_loader, criterion, optimizer, hook, device):
     '''
     TODO: Complete this function that can take a model and
           data loaders for training and will get train the model
           Remember to include any debugging/profiling hooks that you might need
     '''
-    running_loss = 0
-    correct_pred = 0
+    hook.set_mode(smd.modes.TRAIN)  # Set the SMDebug hook for the training phase.
+
     epochs = 3        
     
-    # To keep track of the best performing model (if we end up overfitting, it won't be a problem)
+    # To keep track of the best performing model (if we end up overfitting, it won't be a problem).
     best_model_wts = copy.deepcopy(model.state_dict())   
     smallest_val_loss = float("inf")
 
     for epoch in range(epochs):
     
         model.train()
+        running_loss = 0
+        correct_pred = 0
         
         for inputs, labels in train_loader:
             optimizer.zero_grad()                    # Reset gradients.
+            
+            # Pass inputs and labels to device
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+            
             output = model(inputs)                   # Forward pass.
-            loss = loss_criterion(output, labels)    # Calculate loss.
+            loss = criterion(output, labels)         # Calculate loss.
             loss.backward()                          # Backpropagation.
             optimizer.step()                         # Gradient descent.
             
@@ -74,15 +91,16 @@ def train(model, train_loader, val_loader, criterion, optimizer):
             running_loss += loss.item() * inputs.size(0)
             correct_pred += torch.sum(preds == labels.data)
 
-        epoch_loss = running_loss / len(train_loader)
-        epoch_acc = correct_pred / len(train_loader)
+        epoch_loss = running_loss / len(train_loader.dataset)
+        epoch_acc = correct_pred / len(train_loader.dataset)
         
         logger.info("\nEpoch: {}/{}.. ".format(epoch+1, epochs))
-        logger.info("Training Loss: {:.4f}".format(epoch_loss))
-        logger.info("Training Accuracy: {:.4f}".format(epoch_acc))
+        #logger.info("Training Loss: {:.4f}".format(epoch_loss))
+        #logger.info("Training Accuracy: {:.4f}".format(epoch_acc))
+        logger.info("\nTraining set: Average loss: {:.2f}, Accuracy: {:.2f}\n".format(epoch_loss, epoch_acc))                                                                                                                       
         
         # Now, let's calculate the validation loss, if it is an "all-time-low", we will save the model.
-        current_val_loss = test(model, val_loader, criterion, "val")    
+        current_val_loss = test(model, val_loader, criterion, "val", hook, device)    # Pass the SMDebug hook to the test function
         if current_val_loss < smallest_val_loss:
             smallest_val_loss = current_val_loss
             best_model_wts = copy.deepcopy(model.state_dict())
@@ -123,14 +141,14 @@ def create_data_loaders(data, batch_size):
     depending on whether you need to use data loaders or not
     '''
     training_transform = transforms.Compose([
-        transforms.RandomHorizontalFlip(p=0.5),            # To improve training, let's add a 50% chance of horizontal flip.
-        transforms.Resize(224),                            # The Alexnet model requires a 224*224*3 input dimension.
+        transforms.RandomHorizontalFlip(p=0.5),                   # To improve training, let's add a 50% chance of horizontal flip.
+        transforms.Resize((224, 224)),                            # The Alexnet model requires a 224*224 input dimension.
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],   # Targeted mean for each color channel.
                              std=[0.229, 0.224, 0.225])])  # Targeted std for each color channel.
 
     testing_transform = transforms.Compose([
-        transforms.Resize(224),
+        transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], 
                              std=[0.229, 0.224, 0.225])])
@@ -139,7 +157,7 @@ def create_data_loaders(data, batch_size):
     train_dataset = torchvision.datasets.ImageFolder(root=os.path.join(data, 'train'), transform=training_transform)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     
-    val_dataset = torchvision.datasets.ImageFolder(root=os.path.join(data, 'val'), transform=testing_transform)
+    val_dataset = torchvision.datasets.ImageFolder(root=os.path.join(data, 'valid'), transform=testing_transform)
     val_loader  = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size) 
 
     test_dataset = torchvision.datasets.ImageFolder(root=os.path.join(data, 'test'), transform=testing_transform)
@@ -151,27 +169,33 @@ def main(args):
     '''
     TODO: Initialize a model by calling the net function
     '''
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model=net()
-    
+    model=model.to(device)
+    hook = smd.Hook.create_from_json_file()
+    hook.register_hook(model)
+
     '''
     TODO: Create your loss and optimizer
     '''
-    loss_criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss()
+    #hook.register_loss(criterion)
     optimizer = optim.Adam(model.classifier[6].parameters(), lr=args.lr)
     
     '''
     TODO: Call the train function to start training your model
     Remember that you will need to set up a way to get training data from S3
     '''
+    # Register the SMDebug hook to save the output tensors.
     train_loader, val_loader, test_loader = create_data_loaders(args.data, args.batch_size)
     logger.info("Starting model training...")
-    model=train(model, train_loader, val_loader, loss_criterion, optimizer)
+    model=train(model, train_loader, val_loader, criterion, optimizer, hook, device)  # Pass the SMDebug hook to the train function
     
     '''
     TODO: Test the model to see its accuracy
     '''
-    logger.info("Starting model evaluation...")
-    test(model, test_loader, criterion, "test")
+    #logger.info("Starting model evaluation...")
+    #test(model, test_loader, criterion, "test", hook, device) # Pass the SMDebug hook to the test function
     
     '''
     TODO: Save the trained model

@@ -45,7 +45,7 @@ def _get_train_data_loader(batch_size, training_dir):
         training_dir,
         train=True,
         transform=transforms.Compose(
-            [transforms.ToTensor()]
+            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
         ),
     )
 
@@ -63,7 +63,7 @@ def _get_test_data_loader(test_batch_size, training_dir):
             training_dir,
             train=False,
             transform=transforms.Compose(
-                [transforms.ToTensor()]
+                [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
             ),
         ),
         batch_size=test_batch_size,
@@ -75,6 +75,7 @@ def train(args):
     test_loader = _get_test_data_loader(args.test_batch_size, args.data_dir)
 
     model = Net()
+    
 
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
