@@ -38,7 +38,6 @@ I used SageMaker Debugger profiles and debugs training jobs to identify such pro
 ### Results
 **Debuger:**
 ![Alt text](images/result.png)
-- Firstly, the profiler-report states "NoIssuesFound".
 - Training loss: I do think it is normal for the loss to be bit bumpy when evaluated on each batch, especially when it is quite small (batch_size = 16).
 - Validation loss: I can't explain the strange shape of the val_crossentropyloss_output, especially when we can clearly see that the val loss is decreasing properly at each epoch (output of the estimator.fit() cell).
 
@@ -52,7 +51,6 @@ None of the alarms (rules) have been triggered, which means no major issues have
 
 
 ## Model Deployment
-**TODO**: Give an overview of the deployed model and instructions on how to query the endpoint with a sample input.
 I had troubles accessing the default endpoint (generated from the pytorch estimator deploy function). I suspect it had something to do with the SMDebug library.  
   
   
