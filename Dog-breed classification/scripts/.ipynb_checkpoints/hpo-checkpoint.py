@@ -1,5 +1,3 @@
-#TODO: Import your dependencies.
-#For instance, below are some dependencies you might need if you are using Pytorch
 import numpy as np
 import torch
 import torch.nn as nn
@@ -21,9 +19,7 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 
 def test(model, loader, criterion, val_or_test, device):
     '''
-    TODO: Complete this function that can take a model and a 
-          testing data loader and will get the test accuray/loss of the model
-          Remember to include any debugging/profiling hooks that you might need
+    Take a model and a testing data loader and determine the test accuray/loss of the model.
     '''
     
     model.eval()        # Let's save some compute ressources by not tracking the gradients.
@@ -53,9 +49,7 @@ def test(model, loader, criterion, val_or_test, device):
     
 def train(model, train_loader, val_loader, criterion, optimizer, device):
     '''
-    TODO: Complete this function that can take a model and
-          data loaders for training and will get train the model
-          Remember to include any debugging/profiling hooks that you might need
+    Train the model.
     '''
     
     epochs = 3        
@@ -107,8 +101,7 @@ def train(model, train_loader, val_loader, criterion, optimizer, device):
     
 def net():
     '''
-    TODO: Complete this function that initializes your model
-          Remember to use a pretrained model
+    Initialize a pretrained model.
     '''
     # For this project, I chose to use the alexnet model.
     model = models.alexnet(pretrained=True)
@@ -133,10 +126,7 @@ def net():
     return model
 
 def create_data_loaders(data, batch_size):
-    '''
-    This is an optional function that you may or may not need to implement
-    depending on whether you need to use data loaders or not
-    '''
+    
     training_transform = transforms.Compose([
         transforms.RandomHorizontalFlip(p=0.5),                   # To improve training, let's add a 50% chance of horizontal flip.
         transforms.Resize((224, 224)),                            # The Alexnet model requires a 224*224 input dimension.
@@ -164,34 +154,33 @@ def create_data_loaders(data, batch_size):
 
 def main(args):
     '''
-    TODO: Initialize a model by calling the net function
+    Initialize a model by calling the net function.
     '''
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model=net()
     model=model.to(device)
     
     '''
-    TODO: Create your loss and optimizer
+    Create loss and optimizer.
     '''
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.classifier[6].parameters(), lr=args.lr)
     
     '''
-    TODO: Call the train function to start training your model
-    Remember that you will need to set up a way to get training data from S3
+    Call the train function to start training the model.
     '''
     train_loader, val_loader, test_loader = create_data_loaders(args.data, args.batch_size)
     logger.info("Starting model training...")
     model=train(model, train_loader, val_loader, criterion, optimizer, device)
     
     '''
-    TODO: Test the model to see its accuracy
+    Test the model on the test set
     '''
     logger.info("Starting model evaluation...")
     test(model, test_loader, criterion, "test", device)
     
     '''
-    TODO: Save the trained model
+    Save the trained model
     '''
     logger.info("Saving the model...")
     torch.save(model.cpu().state_dict(), os.path.join(args.model_dir, "model.pth"))
@@ -206,7 +195,7 @@ def model_fn(model_dir): # That would be args.model_dir
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
     '''
-    TODO: Specify all the hyperparameters you need to use to train your model.
+    Specify all the hyperparameters you need to use to train your model.
     '''
     # Data, model, and output directories
     parser.add_argument('--output-data-dir', type=str, default=os.environ['SM_OUTPUT_DATA_DIR'])

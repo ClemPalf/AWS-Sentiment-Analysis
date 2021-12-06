@@ -1,17 +1,7 @@
 # Image Classification using AWS SageMaker
 
-Use AWS Sagemaker to train a pretrained model that can perform image classification by using the Sagemaker profiling, debugger, hyperparameter tuning and other good ML engineering practices. This can be done on either the provided dog breed classication data set or one of your choice.
-
-## Project Set Up and Installation
-Enter AWS through the gateway in the course and open SageMaker Studio. 
-Download the starter files.
-Download/Make the dataset available. 
-
 ## Dataset
-The provided dataset is the dogbreed classification dataset, which contains images from 133 dog breeds divided into training, testing, and validation.
-
-### Access
-Upload the data to an S3 bucket through the AWS Gateway so that SageMaker has access to the data. 
+In this project, we will work with the dogbreed classification dataset, which contains images from 133 dog breeds divided into training, testing, and validation.
 
 ## Hyperparameter Tuning
 For this project, I decided to use the pretrained Alexnet model. I added to the final classification layer 4 FC layers with respectively 750, 500, 250 and 133 neurons.

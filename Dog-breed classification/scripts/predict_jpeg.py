@@ -71,7 +71,7 @@ def predict_fn(input_object, model):
                              std=[0.229, 0.224, 0.225])])
     
     input_object=test_transform(input_object)
-    input_object = input_object.to(device) #put data into GPU
+    input_object = input_object.to(device) 
     
     with torch.no_grad():
         prediction = model(input_object.unsqueeze(0))
